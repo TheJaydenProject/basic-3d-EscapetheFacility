@@ -50,6 +50,11 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player died.");
         Debug.Log("Deaths this run: " + deathCount);
 
+        foreach (WaterHazard water in Object.FindObjectsByType<WaterHazard>(FindObjectsSortMode.None))
+        {
+            water.CancelWaterDamageFor(gameObject);
+        }
+
         foreach (GasHazard gas in Object.FindObjectsByType<GasHazard>(FindObjectsSortMode.None))
         {
             gas.CancelGasDamageFor(gameObject);
