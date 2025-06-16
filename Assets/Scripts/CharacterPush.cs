@@ -1,10 +1,25 @@
 using UnityEngine;
 
+/// <summary>
+/// Handles the logic for allowing the player to push rigidbody objects using a CharacterController.
+/// </summary>
 public class CharacterPush : MonoBehaviour
 {
+    /// <summary>
+    /// Reference to the CharacterController component on the player.
+    /// </summary>
     public CharacterController controller;
+
+    /// <summary>
+    /// Force applied to pushable objects.
+    /// </summary>
     public float pushPower = 4f;
 
+    /// <summary>
+    /// Called when the CharacterController collides with another object.
+    /// Attempts to apply force to rigidbody objects.
+    /// </summary>
+    /// <param name="hit">Collision data from the controller hit.</param>
     void OnControllerColliderHit(ControllerColliderHit hit)
     {
         Rigidbody body = hit.collider.attachedRigidbody;

@@ -9,7 +9,7 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"last_search.66F56946" = "pac"
+	"last_search.66F56946" = "material ed"
 	"OpenInspectorPreview.66F56946" = "0"
 	"currentGroup.66F56946" = "all"
 }
@@ -68,8 +68,10 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
-	"pa"
+	"material ei"
 	"mater"
+	"material edi"
+	"pa"
 ]
 searchItemFavorites = [
 ]
