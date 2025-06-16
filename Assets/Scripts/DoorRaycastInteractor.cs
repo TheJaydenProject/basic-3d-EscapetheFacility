@@ -1,6 +1,17 @@
 using UnityEngine;
 
-public class DoorInteraction : MonoBehaviour
+/// <summary>
+/// Handles player interaction with normal and locked doors using raycasting.
+/// Displays appropriate UI prompts and messages, and logs key events for debugging.
+/// </summary>
+/*
+ * Author: Jayden Wong
+ * Date: 6/16/2025
+ * Description: This script detects if the player is looking at a door using a raycast,
+ * displays the correct UI prompt (Open, Close, Locked), and allows interaction using 'E'.
+ * Also handles debug logs to confirm door state changes and access results.
+ */
+public class PlayerDoorInteractor : MonoBehaviour
 {
     [Header("Settings")]
     [Tooltip("Maximum distance to interact with doors")]
@@ -22,6 +33,7 @@ public class DoorInteraction : MonoBehaviour
     [Tooltip("Temporary message panel that appears when door is locked and keycard is missing")]
     public GameObject lockedMessagePanel;
 
+    // Timer to hide locked message after a delay
     private float lockedMessageTimer = 0f;
 
     void Update()
@@ -39,59 +51,73 @@ public class DoorInteraction : MonoBehaviour
             }
         }
 
+        // Create a ray from the checkOrigin point forward
         Ray ray = new Ray(checkOrigin.position, checkOrigin.forward);
         Debug.DrawRay(ray.origin, ray.direction * interactDistance, Color.red);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, interactDistance))
         {
-            Door door = hit.collider.GetComponentInParent<Door>();
-            LockedDoor lockedDoor = hit.collider.GetComponentInParent<LockedDoor>();
+            BasicDoorController door = hit.collider.GetComponentInParent<BasicDoorController>();
+            LockedDoorController lockedDoor = hit.collider.GetComponentInParent<LockedDoorController>();
 
+            // Regular door logic
             if (door != null)
             {
                 bool isOpen = door.IsOpen();
 
+                // Show correct UI prompt
                 interactPromptOpen.SetActive(!isOpen);
                 interactPromptClose.SetActive(isOpen);
                 interactPromptLocked.SetActive(false);
 
+                // Handle input
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     door.Interact();
+
+                    if (isOpen)
+                        Debug.Log("[DoorInteractor] Closed door: " + door.name);
+                    else
+                        Debug.Log("[DoorInteractor] Opened door: " + door.name);
                 }
 
                 return;
             }
+
+            // Locked door logic
             else if (lockedDoor != null)
             {
                 PlayerInventory inventory = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerInventory>();
-                bool canOpen = inventory != null && inventory.HasKeycard();
+                bool hasKeycard = inventory != null && inventory.HasKeycard();
+                bool isOpen = lockedDoor.IsOpen();
 
-                if (canOpen)
-                {
-                    bool isOpen = lockedDoor.IsOpen();
-                    interactPromptOpen.SetActive(!isOpen);
-                    interactPromptClose.SetActive(isOpen);
-                    interactPromptLocked.SetActive(false);
-                }
-                else
-                {
-                    interactPromptOpen.SetActive(false);
-                    interactPromptClose.SetActive(false);
-                    interactPromptLocked.SetActive(true);
-                }
+                // Update UI prompts
+                interactPromptOpen.SetActive(hasKeycard && !isOpen);
+                interactPromptClose.SetActive(hasKeycard && isOpen);
+                interactPromptLocked.SetActive(!hasKeycard);
 
+                // Handle input
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    if (canOpen)
+                    if (hasKeycard)
                     {
                         lockedDoor.Interact();
+
+                        if (isOpen)
+                            Debug.Log("[DoorInteractor] Closed locked door (with keycard): " + lockedDoor.name);
+                        else
+                            Debug.Log("[DoorInteractor] Opened locked door (with keycard): " + lockedDoor.name);
                     }
-                    else if (lockedMessagePanel != null)
+                    else
                     {
-                        lockedMessagePanel.SetActive(true);
-                        lockedMessageTimer = 1.2f;
+                        Debug.Log("[DoorInteractor] Door is locked and player has no keycard: " + lockedDoor.name);
+
+                        if (lockedMessagePanel != null)
+                        {
+                            lockedMessagePanel.SetActive(true);
+                            lockedMessageTimer = 1.2f;
+                        }
                     }
                 }
 
@@ -99,11 +125,15 @@ public class DoorInteraction : MonoBehaviour
             }
         }
 
+        // Hide all prompts if nothing interactable
         interactPromptOpen.SetActive(false);
         interactPromptClose.SetActive(false);
         interactPromptLocked.SetActive(false);
     }
 
+    /// <summary>
+    /// Visualize ray direction in Scene view when selected.
+    /// </summary>
     void OnDrawGizmosSelected()
     {
         if (checkOrigin == null) return;
