@@ -1,43 +1,51 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class GasHazard : MonoBehaviour
 {
-    public int damageAmount = 10;
-    public float damageInterval = 2f;
+    public int damageAmount = 20;
+    public float damageInterval = 1f;
 
-    private void OnTriggerStay(Collider other)
+    private Dictionary<GameObject, Coroutine> gasCoroutines = new Dictionary<GameObject, Coroutine>();
+
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !gasCoroutines.ContainsKey(other.gameObject))
         {
-            PlayerHealth health = other.GetComponent<PlayerHealth>();
-            if (health != null)
-            {
-                if (!IsInvoking(nameof(ApplyGasDamage)))
-                {
-                    InvokeRepeating(nameof(ApplyGasDamage), 0f, damageInterval);
-                }
-            }
+            Coroutine c = StartCoroutine(DamageOverTime(other.gameObject));
+            gasCoroutines.Add(other.gameObject, c);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && gasCoroutines.ContainsKey(other.gameObject))
         {
-            CancelInvoke(nameof(ApplyGasDamage));
+            StopCoroutine(gasCoroutines[other.gameObject]);
+            gasCoroutines.Remove(other.gameObject);
         }
     }
 
-    void ApplyGasDamage()
+    IEnumerator DamageOverTime(GameObject player)
     {
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+
+        while (health != null && health.GetCurrentHealth() > 0)
         {
-            PlayerHealth health = player.GetComponent<PlayerHealth>();
-            if (health != null)
-            {
-                health.TakeDamage(damageAmount);
-            }
+            health.TakeDamage(damageAmount, gameObject.tag);
+            yield return new WaitForSeconds(damageInterval);
+        }
+
+        gasCoroutines.Remove(player);
+    }
+
+    public void CancelGasDamageFor(GameObject player)
+    {
+        if (gasCoroutines.ContainsKey(player))
+        {
+            StopCoroutine(gasCoroutines[player]);
+            gasCoroutines.Remove(player);
         }
     }
 }
