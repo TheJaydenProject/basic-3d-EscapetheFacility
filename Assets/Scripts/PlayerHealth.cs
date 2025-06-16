@@ -1,6 +1,10 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
+/// <summary>
+/// Handles player's health, damage flash, respawn, and death count.
+/// </summary>
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
@@ -13,7 +17,17 @@ public class PlayerHealth : MonoBehaviour
     [Header("Respawn")]
     public Transform spawnPoint;
 
-    private int deathCount = 0; // Tracks how many times the player has died
+    [Header("Damage Feedback")]
+    [Tooltip("Red overlay panel that flashes when taking damage")]
+    public GameObject DamageOverlay;
+
+    [Tooltip("Duration of red overlay flash in seconds")]
+    public float damageFlashDuration = 0.4f;
+
+    [Tooltip("Sound to play when taking damage")]
+    public AudioSource damageSFX;
+
+    private int deathCount = 0;
 
     void Start()
     {
@@ -30,10 +44,16 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log($"Damaged by: {sourceTag} | Amount: {amount}");
         Debug.Log($"Player HP: {currentHealth}");
 
+        // Flash red overlay
+        if (DamageOverlay != null)
+            StartCoroutine(FlashDamageOverlay());
+
+        // Play damage sound
+        if (damageSFX != null && !damageSFX.isPlaying)
+            damageSFX.Play();
+
         if (currentHealth <= 0)
-        {
             Die();
-        }
     }
 
     public void InstantKill(string sourceTag = "Unknown")
@@ -51,14 +71,10 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Deaths this run: " + deathCount);
 
         foreach (WaterHazard water in Object.FindObjectsByType<WaterHazard>(FindObjectsSortMode.None))
-        {
             water.CancelWaterDamageFor(gameObject);
-        }
 
         foreach (GasHazard gas in Object.FindObjectsByType<GasHazard>(FindObjectsSortMode.None))
-        {
             gas.CancelGasDamageFor(gameObject);
-        }
 
         CharacterController controller = GetComponent<CharacterController>();
         if (controller != null) controller.enabled = false;
@@ -83,8 +99,16 @@ public class PlayerHealth : MonoBehaviour
     private void UpdateHealthUI()
     {
         if (healthText != null)
-        {
             healthText.text = "HP: " + currentHealth + " / " + maxHealth;
+    }
+
+    private IEnumerator FlashDamageOverlay()
+    {
+        if (DamageOverlay != null)
+        {
+            DamageOverlay.SetActive(true);
+            yield return new WaitForSeconds(damageFlashDuration);
+            DamageOverlay.SetActive(false);
         }
     }
 }
