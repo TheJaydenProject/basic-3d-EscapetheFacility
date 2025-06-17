@@ -1,138 +1,177 @@
 using UnityEngine;
 
 /// <summary>
-/// Handles player interaction with normal and locked doors using raycasting.
+/// Handles player interaction with normal, locked, and end doors using raycasting.
 /// Displays appropriate UI prompts and messages, and logs key events for debugging.
 /// </summary>
 /*
  * Author: Jayden Wong
- * Date: 6/16/2025
- * Description: This script detects if the player is looking at a door using a raycast,
- * displays the correct UI prompt (Open, Close, Locked), and allows interaction using 'E'.
- * Also handles debug logs to confirm door state changes and access results.
+ * Date: 16/06/2025
+ * Description: Detects and interacts with regular, locked, and end doors using a raycast.
+ * Shows specific UI prompts for each type and handles 'E' key interactions.
  */
+
 public class PlayerDoorInteractor : MonoBehaviour
 {
     [Header("Settings")]
+
+    /// <summary>
+    /// Maximum distance the player can interact with a door via raycast.
+    /// </summary>
     [Tooltip("Maximum distance to interact with doors")]
     public float interactDistance = 2f;
 
     [Header("References")]
-    [Tooltip("Ray origin point (usually the camera or player head)")]
+
+    /// <summary>
+    /// Origin point from which the raycast will be cast (usually the player camera).
+    /// </summary>
     public Transform checkOrigin;
 
-    [Tooltip("UI panel shown when door is closed and can be opened")]
+    /// <summary>
+    /// UI prompt shown when a door can be opened.
+    /// </summary>
     public GameObject interactPromptOpen;
 
-    [Tooltip("UI panel shown when door is open and can be closed")]
+    /// <summary>
+    /// UI prompt shown when a door can be closed.
+    /// </summary>
     public GameObject interactPromptClose;
 
-    [Tooltip("UI panel shown when door is locked and cannot be opened")]
+    /// <summary>
+    /// UI prompt shown when a door is locked and cannot be opened.
+    /// </summary>
     public GameObject interactPromptLocked;
 
-    [Tooltip("Temporary message panel that appears when door is locked and keycard is missing")]
+    /// <summary>
+    /// UI prompt shown when the player reaches the final escape door.
+    /// </summary>
+    public GameObject interactPromptEscape;
+
+    /// <summary>
+    /// Panel that briefly shows a locked door message when the player lacks a keycard.
+    /// </summary>
     public GameObject lockedMessagePanel;
 
-    // Timer to hide locked message after a delay
+    /// <summary>
+    /// Timer for how long the locked message panel stays visible.
+    /// </summary>
     private float lockedMessageTimer = 0f;
 
     void Update()
     {
-        if (checkOrigin == null || interactPromptOpen == null || interactPromptClose == null || interactPromptLocked == null)
-            return;
+        // Exit if no origin for raycast is set (e.g., missing reference)
+        if (checkOrigin == null) return;
 
-        // Handle auto-hide for locked message
+        // Handle timer-based hiding of the locked door message panel
         if (lockedMessagePanel != null && lockedMessagePanel.activeSelf)
         {
-            lockedMessageTimer -= Time.deltaTime;
+            lockedMessageTimer -= Time.unscaledDeltaTime;
+
+            // Hide the message when the timer runs out
             if (lockedMessageTimer <= 0f)
-            {
                 lockedMessagePanel.SetActive(false);
-            }
         }
 
-        // Create a ray from the checkOrigin point forward
+        // Create a ray from the origin forward to detect interactable objects
         Ray ray = new Ray(checkOrigin.position, checkOrigin.forward);
-        Debug.DrawRay(ray.origin, ray.direction * interactDistance, Color.red);
+        Debug.DrawRay(ray.origin, ray.direction * interactDistance, Color.red); // Debug line in editor
         RaycastHit hit;
 
+        // Perform the raycast
         if (Physics.Raycast(ray, out hit, interactDistance))
         {
+            // Try to get the relevant door or trigger component from the object hit
             BasicDoorController door = hit.collider.GetComponentInParent<BasicDoorController>();
             LockedDoorController lockedDoor = hit.collider.GetComponentInParent<LockedDoorController>();
+            EndGameTrigger endTrigger = hit.collider.GetComponentInParent<EndGameTrigger>();
 
-            // Regular door logic
+            // If a basic door was hit, handle open/close interaction
             if (door != null)
             {
                 bool isOpen = door.IsOpen();
 
-                // Show correct UI prompt
-                interactPromptOpen.SetActive(!isOpen);
-                interactPromptClose.SetActive(isOpen);
-                interactPromptLocked.SetActive(false);
+                // Show appropriate prompt depending on door state
+                SetPromptStates(!isOpen, isOpen, false, false);
 
-                // Handle input
+                // If 'E' is pressed, toggle the door state
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     door.Interact();
-
-                    if (isOpen)
-                        Debug.Log("[DoorInteractor] Closed door: " + door.name);
-                    else
-                        Debug.Log("[DoorInteractor] Opened door: " + door.name);
+                    Debug.Log(isOpen ? "[DoorInteractor] Closed door" : "[DoorInteractor] Opened door");
                 }
 
                 return;
             }
 
-            // Locked door logic
-            else if (lockedDoor != null)
+            // If a locked door was hit, check inventory for keycard before allowing interaction
+            if (lockedDoor != null)
             {
-                PlayerInventory inventory = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerInventory>();
+                var inventory = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerInventory>();
                 bool hasKeycard = inventory != null && inventory.HasKeycard();
                 bool isOpen = lockedDoor.IsOpen();
 
-                // Update UI prompts
-                interactPromptOpen.SetActive(hasKeycard && !isOpen);
-                interactPromptClose.SetActive(hasKeycard && isOpen);
-                interactPromptLocked.SetActive(!hasKeycard);
+                // Show prompts based on lock status and possession of keycard
+                SetPromptStates(hasKeycard && !isOpen, hasKeycard && isOpen, !hasKeycard, false);
 
-                // Handle input
+                // Handle interaction input
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     if (hasKeycard)
                     {
                         lockedDoor.Interact();
-
-                        if (isOpen)
-                            Debug.Log("[DoorInteractor] Closed locked door (with keycard): " + lockedDoor.name);
-                        else
-                            Debug.Log("[DoorInteractor] Opened locked door (with keycard): " + lockedDoor.name);
+                        Debug.Log(isOpen ? "[DoorInteractor] Closed locked door" : "[DoorInteractor] Opened locked door");
                     }
-                    else
+                    else if (lockedMessagePanel != null)
                     {
-                        Debug.Log("[DoorInteractor] Door is locked and player has no keycard: " + lockedDoor.name);
-
-                        if (lockedMessagePanel != null)
-                        {
-                            lockedMessagePanel.SetActive(true);
-                            lockedMessageTimer = 1.2f;
-                        }
+                        // Show warning panel if keycard is missing
+                        lockedMessagePanel.SetActive(true);
+                        lockedMessageTimer = 1.2f;
                     }
+                }
+
+                return;
+            }
+
+            // If the hit object is tagged as an end trigger, show escape prompt
+            if (hit.collider.CompareTag("End") && endTrigger != null)
+            {
+                SetPromptStates(false, false, false, true);
+
+                // Trigger end game if 'E' is pressed
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    interactPromptEscape.SetActive(false); // Hide escape UI
+                    endTrigger.TriggerEndGame();           // Start end game sequence
+                    Debug.Log("[DoorInteractor] Player escaped via End door");
                 }
 
                 return;
             }
         }
 
-        // Hide all prompts if nothing interactable
-        interactPromptOpen.SetActive(false);
-        interactPromptClose.SetActive(false);
-        interactPromptLocked.SetActive(false);
+        // No interactable object in front, hide all prompts
+        SetPromptStates(false, false, false, false);
     }
 
     /// <summary>
-    /// Visualize ray direction in Scene view when selected.
+    /// Controls the visibility of different interaction prompts.
+    /// </summary>
+    /// <param name="open">Show open door prompt</param>
+    /// <param name="close">Show close door prompt</param>
+    /// <param name="locked">Show locked door prompt</param>
+    /// <param name="escape">Show escape door prompt</param>
+    void SetPromptStates(bool open, bool close, bool locked, bool escape)
+    {
+        if (interactPromptOpen != null) interactPromptOpen.SetActive(open);
+        if (interactPromptClose != null) interactPromptClose.SetActive(close);
+        if (interactPromptLocked != null) interactPromptLocked.SetActive(locked);
+        if (interactPromptEscape != null) interactPromptEscape.SetActive(escape);
+    }
+
+    /// <summary>
+    /// Visualizes the raycast in the editor when the object is selected.
+    /// Helps in debugging the raycast direction and range.
     /// </summary>
     void OnDrawGizmosSelected()
     {

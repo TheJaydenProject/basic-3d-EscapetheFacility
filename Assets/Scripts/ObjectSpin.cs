@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 /*
  * Author: Jayden Wong
- * Date: 6/16/2025
+ * Date: 16/06/2025
  * Description: This script rotates an object around its Y-axis to create a visual cue,
  * typically used for collectibles or interactive items in a Unity 3D environment.
  */
@@ -19,10 +19,12 @@ public class SpinObject : MonoBehaviour
     public float yRotationSpeed = 90f;
 
     /// <summary>
-    /// Rotates the object every frame to simulate spinning.
+    /// Unity's built-in method called every frame.
+    /// Applies a Y-axis rotation to make the object spin.
     /// </summary>
     void Update()
     {
+        // Rotate the object around the Y-axis continuously to draw player attention
         transform.Rotate(0, yRotationSpeed * Time.deltaTime, 0);
     }
 }

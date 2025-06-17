@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 /*
  * Author: Jayden Wong
- * Date: 6/16/2025
+ * Date: 16/06/2025
  * Description: Enables the player to push non-kinematic rigidbody objects by applying horizontal force
  * during collisions. Also logs a message when pushing, throttled to once every few seconds to prevent spam.
  */
@@ -29,34 +29,36 @@ public class PushableObjectHandler : MonoBehaviour
     public float pushLogCooldown = 3f;
 
     /// <summary>
-    /// Timer to control push log frequency.
+    /// Timestamp of the last push log.
+    /// Used to throttle how often push events are logged.
     /// </summary>
     private float lastPushTime = -Mathf.Infinity;
 
     /// <summary>
-    /// Triggered when the CharacterController hits another collider.
-    /// Tries to apply impulse force if the object is pushable.
+    /// Called when the CharacterController collides with another collider.
+    /// Applies a force to the other object if it has a non-kinematic Rigidbody.
     /// </summary>
     /// <param name="hit">Collision information from the controller.</param>
     void OnControllerColliderHit(ControllerColliderHit hit)
     {
+        // Get the Rigidbody attached to the collided object
         Rigidbody body = hit.collider.attachedRigidbody;
 
-        // Exit if the object can't be pushed
+        // Skip if the object has no Rigidbody or is marked as kinematic (immovable)
         if (body == null || body.isKinematic)
             return;
 
-        // Prevent pushing downward
+        // Prevent pushing if the player is falling down onto the object
         if (hit.moveDirection.y < -0.3f)
             return;
 
-        // Push only horizontally
+        // Calculate push direction (horizontal only)
         Vector3 pushDirection = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
 
-        // Apply the push force at collision point
+        // Apply an impulse force to the object at the collision point
         body.AddForceAtPosition(pushDirection * pushPower, hit.point, ForceMode.Impulse);
 
-        // Throttled debug message
+        // Log push event with cooldown to avoid spamming console
         if (Time.time - lastPushTime >= pushLogCooldown)
         {
             Debug.Log($"[PushableObjectHandler] Pushed: {body.name}");

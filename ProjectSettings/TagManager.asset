@@ -10,6 +10,7 @@ TagManager:
   - GasHazard
   - GasMask
   - Coin
+  - End
   layers:
   - Default
   - TransparentFX

@@ -6,44 +6,51 @@ using UnityEngine;
 /// </summary>
 /*
  * Author: Jayden Wong
- * Date: 6/16/2025
+ * Date: 16/06/2025
  * Description: Handles interaction logic for collecting a keycard object in the scene.
- * Updates inventory, shows a temporary confirmation UI, and removes the object from the world.
+ * Updates inventory, shows a temporary prompt confirmation UI, and removes the object from the world.
  */
 public class KeycardPickupHandler : MonoBehaviour
 {
+    /// <summary>
+    /// UI panel that is displayed when the keycard is collected by the player.
+    /// </summary>
     [Tooltip("UI panel shown when keycard is collected")]
     public GameObject keycardCollectedPanel;
 
+    /// <summary>
+    /// How long (in seconds) the keycard collected panel stays on screen.
+    /// </summary>
     [Tooltip("How long the collected panel stays visible")]
     public float displayDuration = 3f;
 
     /// <summary>
-    /// Called when the player interacts with the keycard (e.g., via raycast + 'E' key).
-    /// Adds the keycard to inventory, shows a temporary UI, and removes this object.
+    /// Called when the player interacts with the keycard (via raycast + 'E' key).
+    /// Gives the player a keycard, shows a visual confirmation, and removes the object from the scene.
     /// </summary>
     public void Interact()
     {
-        // Attempt to find PlayerInventory on player
+        // Attempt to find the PlayerInventory script on the GameObject tagged as "Player"
         PlayerInventory inventory = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerInventory>();
 
         if (inventory != null)
         {
-            // Give the keycard to inventory
+            // Add keycard to the player's inventory
             inventory.GiveKeycard();
 
-            // Show the 'collected' panel if assigned
+            // Display confirmation UI if it's set
             if (keycardCollectedPanel != null)
             {
-                keycardCollectedPanel.SetActive(true);
-                Invoke(nameof(HidePanel), displayDuration);
+                keycardCollectedPanel.SetActive(true); // Show the collected message
+                Invoke(nameof(HidePanel), displayDuration); // Schedule hiding the panel after delay
             }
 
-            // Remove the keycard object from the scene
+            // Remove the keycard from the game world
             Destroy(gameObject);
         }
         else
         {
+            // Warn in console if PlayerInventory is missing
             Debug.LogWarning("[KeycardPickup] Could not find PlayerInventory component.");
         }
     }
@@ -54,6 +61,6 @@ public class KeycardPickupHandler : MonoBehaviour
     private void HidePanel()
     {
         if (keycardCollectedPanel != null)
-            keycardCollectedPanel.SetActive(false);
+            keycardCollectedPanel.SetActive(false); // Hide the UI panel
     }
 }

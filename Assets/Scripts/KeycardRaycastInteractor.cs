@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 /*
  * Author: Jayden Wong
- * Date: 6/16/2025
+ * Date: 16/06/2025
  * Description: This script allows the player to detect and pick up a keycard using raycasting.
  * It shows a prompt when looking at a keycard, calls the pickup logic on interaction,
  * and toggles a "keycard acquired" panel based on inventory state.
@@ -14,24 +14,46 @@ using UnityEngine;
 public class KeycardRaycastInteractor : MonoBehaviour
 {
     [Header("Settings")]
+
+    /// <summary>
+    /// Maximum distance from which the player can interact with the keycard.
+    /// </summary>
     [Tooltip("Maximum distance to interact with keycards")]
     public float interactDistance = 2f;
 
     [Header("References")]
+
+    /// <summary>
+    /// The origin point from which the raycast is fired (usually the player camera).
+    /// </summary>
     [Tooltip("Point from which the raycast is fired (usually the camera)")]
     public Transform checkOrigin;
 
+    /// <summary>
+    /// UI panel displayed when the player is looking at a keycard.
+    /// </summary>
     [Tooltip("UI shown when player is looking at a keycard")]
     public GameObject keycardPromptPanel;
 
+    /// <summary>
+    /// UI panel shown once the player has collected the keycard.
+    /// </summary>
     [Tooltip("UI shown when player has collected the keycard")]
     public GameObject keycardAcquiredPanel;
 
+    /// <summary>
+    /// Tracks the keycard object the player is currently targeting.
+    /// </summary>
     private KeycardPickupHandler currentKeycard;
+
+    /// <summary>
+    /// Reference to the player's inventory system to check for keycard possession.
+    /// </summary>
     private PlayerInventory inventory;
 
     void Start()
     {
+        // Find the player's inventory by tag and store the reference
         inventory = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerInventory>();
 
         if (inventory == null)
@@ -40,49 +62,52 @@ public class KeycardRaycastInteractor : MonoBehaviour
 
     void Update()
     {
-        // Exit early if critical references are missing
+        // Early exit if critical references are missing to prevent errors
         if (checkOrigin == null || keycardPromptPanel == null || inventory == null)
         {
             Debug.LogWarning("[KeycardInteractor] Missing reference(s): checkOrigin, promptPanel, or inventory.");
             return;
         }
 
-        // Cast ray forward
+        // Create a ray pointing forward from the origin point
         Ray ray = new Ray(checkOrigin.position, checkOrigin.forward);
-        Debug.DrawRay(ray.origin, ray.direction * interactDistance, Color.green);
+        Debug.DrawRay(ray.origin, ray.direction * interactDistance, Color.green); // Editor debug ray
 
+        // Perform a raycast to check if the player is aiming at a keycard
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance))
         {
             if (hit.collider.CompareTag("Keycard"))
             {
+                // Get the KeycardPickupHandler from the hit object
                 KeycardPickupHandler pickup = hit.collider.GetComponent<KeycardPickupHandler>();
 
+                // If the target has changed, update reference and show prompt
                 if (pickup != null && pickup != currentKeycard)
                 {
-                    HidePrompt();
+                    HidePrompt(); // Hide any previously active prompt
                     currentKeycard = pickup;
-                    keycardPromptPanel.SetActive(true);
+                    keycardPromptPanel.SetActive(true); // Show new prompt
                     Debug.Log("[KeycardInteractor] Looking at keycard: " + pickup.name);
                 }
 
-                // Player presses E to pick up
+                // If the player presses E, collect the keycard
                 if (Input.GetKeyDown(KeyCode.E) && currentKeycard != null)
                 {
-                    pickup.Interact();
-                    currentKeycard = null;
-                    keycardPromptPanel.SetActive(false);
+                    pickup.Interact(); // Trigger pickup logic
+                    currentKeycard = null; // Reset reference
+                    keycardPromptPanel.SetActive(false); // Hide prompt
                     Debug.Log($"[KeycardInteractor] Keycard collected and added to inventory: {pickup.name}");
                 }
 
-                return;
+                return; // Early exit if keycard was hit
             }
         }
 
-        // No keycard hit
+        // If raycast didn't hit a keycard, hide prompt and reset reference
         HidePrompt();
         currentKeycard = null;
 
-        // Update keycard acquired panel
+        // Update the acquired panel based on whether the player owns the keycard
         if (keycardAcquiredPanel != null)
         {
             bool hasCard = inventory.HasKeycard();
@@ -91,7 +116,7 @@ public class KeycardRaycastInteractor : MonoBehaviour
     }
 
     /// <summary>
-    /// Hides the prompt panel if active.
+    /// Hides the keycard prompt UI if it is currently active.
     /// </summary>
     void HidePrompt()
     {
