@@ -99,7 +99,7 @@ public class PlayerHealth : MonoBehaviour
     private void UpdateHealthUI()
     {
         if (healthText != null)
-            healthText.text = "HP: " + currentHealth + " / " + maxHealth;
+            healthText.text = "" + currentHealth + " / " + maxHealth;
     }
 
     private IEnumerator FlashDamageOverlay()

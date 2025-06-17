@@ -9,6 +9,7 @@ TagManager:
   - Keycard
   - GasHazard
   - GasMask
+  - Coin
   layers:
   - Default
   - TransparentFX
