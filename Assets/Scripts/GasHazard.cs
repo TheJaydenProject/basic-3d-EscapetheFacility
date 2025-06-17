@@ -16,11 +16,9 @@ public class GasHazard : MonoBehaviour
     {
         if (other.CompareTag("Player") && !gasCoroutines.ContainsKey(other.gameObject))
         {
-            // Start damage coroutine
             Coroutine c = StartCoroutine(DamageOverTime(other.gameObject));
             gasCoroutines.Add(other.gameObject, c);
 
-            // Show overlay if assigned
             if (gasOverlayPanel != null)
                 gasOverlayPanel.SetActive(true);
         }
@@ -33,7 +31,6 @@ public class GasHazard : MonoBehaviour
             StopCoroutine(gasCoroutines[other.gameObject]);
             gasCoroutines.Remove(other.gameObject);
 
-            // Hide overlay
             if (gasOverlayPanel != null)
                 gasOverlayPanel.SetActive(false);
         }
@@ -42,14 +39,19 @@ public class GasHazard : MonoBehaviour
     IEnumerator DamageOverTime(GameObject player)
     {
         PlayerHealth health = player.GetComponent<PlayerHealth>();
+        PlayerInventory inventory = player.GetComponent<PlayerInventory>();
 
         while (health != null && health.GetCurrentHealth() > 0)
         {
-            health.TakeDamage(damageAmount, gameObject.tag);
+            // Skip damage if gas mask is equipped
+            if (inventory != null && !inventory.HasGasMask())
+            {
+                health.TakeDamage(damageAmount, gameObject.tag);
+            }
+
             yield return new WaitForSeconds(damageInterval);
         }
 
-        // Safety: hide overlay after death
         if (gasOverlayPanel != null)
             gasOverlayPanel.SetActive(false);
 
@@ -63,7 +65,6 @@ public class GasHazard : MonoBehaviour
             StopCoroutine(gasCoroutines[player]);
             gasCoroutines.Remove(player);
 
-            // Hide overlay when cancelled
             if (gasOverlayPanel != null)
                 gasOverlayPanel.SetActive(false);
         }
