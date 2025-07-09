@@ -2,6 +2,10 @@
 
 **Escape The Facility** is a first-person 3D escape game built in Unity. Explore, avoid deadly hazards, and find the exit door while collecting coins and key items. How fast can you escape — and can you do it with a perfect score?
 
+## Download & Play
+
+[Download EscapeTheFacilitySetup_x64.exe](https://github.com/TheJaydenProject/basic-3d-EscapetheFacility/releases/latest/download/EscapeTheFacilitySetup_x64.exe)
+
 ## Gameplay Overview
 
 Escape the Facility is a time- and skill-based game where your **final score** depends on:
