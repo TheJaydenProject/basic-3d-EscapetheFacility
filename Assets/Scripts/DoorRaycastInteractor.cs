@@ -54,9 +54,19 @@ public class PlayerDoorInteractor : MonoBehaviour
     public GameObject lockedMessagePanel;
 
     /// <summary>
+    /// UI panel that briefly shows when a locked door is successfully unlocked.
+    /// </summary>
+    public GameObject doorUnlockedMessagePanel;
+
+    /// <summary>
     /// Timer for how long the locked message panel stays visible.
     /// </summary>
     private float lockedMessageTimer = 0f;
+
+    /// <summary>
+    /// Timer for how long the unlocked door message panel stays visible.
+    /// </summary>
+    private float unlockedMessageTimer = 0f;
 
     void Update()
     {
@@ -71,6 +81,16 @@ public class PlayerDoorInteractor : MonoBehaviour
             // Hide the message when the timer runs out
             if (lockedMessageTimer <= 0f)
                 lockedMessagePanel.SetActive(false);
+        }
+
+        // Handle timer-based hiding of the unlocked door message panel
+        if (doorUnlockedMessagePanel != null && doorUnlockedMessagePanel.activeSelf)
+        {
+            unlockedMessageTimer -= Time.unscaledDeltaTime;
+
+            // Hide the unlocked message when time runs out
+            if (unlockedMessageTimer <= 0f)
+                doorUnlockedMessagePanel.SetActive(false);
         }
 
         // Create a ray from the origin forward to detect interactable objects
@@ -120,6 +140,14 @@ public class PlayerDoorInteractor : MonoBehaviour
                     if (hasKeycard)
                     {
                         lockedDoor.Interact();
+
+                        // Show "Door Unlocked" prompt only when opening (not closing)
+                        if (!isOpen && doorUnlockedMessagePanel != null)
+                        {
+                            doorUnlockedMessagePanel.SetActive(true);
+                            unlockedMessageTimer = 1.5f;
+                        }
+
                         Debug.Log(isOpen ? "[DoorInteractor] Closed locked door" : "[DoorInteractor] Opened locked door");
                     }
                     else if (lockedMessagePanel != null)

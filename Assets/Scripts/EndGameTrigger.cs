@@ -78,12 +78,18 @@ public class EndGameTrigger : MonoBehaviour
     /// </summary>
     private bool inRange = false;
 
+    /// <summary>
+    /// Whether the timer should start counting.
+    /// Controlled by StartOverlayController.
+    /// </summary>
+    private bool timerStarted = false;
+
     void Update()
     {
-        // Track time since game started
+        if (!timerStarted) return; // Don't count time until manually started
+
         timeElapsed += Time.deltaTime;
 
-        // If player is in range and presses 'E', end the game
         if (inRange && Input.GetKeyDown(KeyCode.E))
         {
             TriggerEndGame();
@@ -104,22 +110,19 @@ public class EndGameTrigger : MonoBehaviour
         int totalCoins = coinCollector != null ? coinCollector.totalCoins : 25;
 
         // Calculate score based on coins collected, deaths, and time taken
-        float coinScore = (coins / (float)totalCoins) * 500f;
-        float deathPenalty = Mathf.Min(200f, deaths * 20f);
+        float coinScore = (coins / (float)totalCoins) * 700f;
+        float deathPenalty = Mathf.Min(200f, deaths * 40f);
 
         float timePenalty;
-        if (timeElapsed <= 300f)
-        {
-            // Less than 5 mins — light penalty
-            timePenalty = Mathf.Min(100f, Mathf.Max(0f, timeElapsed - 150f) * 0.5f);
-        }
-        else
-        {
-            // More than 5 mins — heavier penalty
-            timePenalty = Mathf.Min(400f, 75f + Mathf.Max(0f, timeElapsed - 300f) * 1.5f);
-        }
 
-        int finalScore = Mathf.RoundToInt(250f + coinScore - deathPenalty - timePenalty);
+        if (timeElapsed <= 150f)
+            timePenalty = 0f;
+        else if (timeElapsed <= 300f)
+            timePenalty = Mathf.Min(99f, (timeElapsed - 150f) * 0.66f); 
+        else
+            timePenalty = 150f + (timeElapsed - 300f) * 2f;  // heavy penalty for long time
+
+        int finalScore = Mathf.RoundToInt(999f + coinScore - deathPenalty - timePenalty - 700f);
         finalScore = Mathf.Clamp(finalScore, 0, 999); // Clamp to 0–999
 
         // Show end panel with game summary
@@ -173,5 +176,22 @@ public class EndGameTrigger : MonoBehaviour
     {
         if (other.CompareTag("Player"))
             inRange = false; // Disable interaction
+    }
+
+    /// <summary>
+    /// Returns the total time elapsed since the game started.
+    /// </summary>
+    public float GetElapsedTime()
+    {
+        return timeElapsed;
+    }
+
+    /// <summary>
+    /// Starts the in-game timer.
+    /// Called externally by the StartOverlayController.
+    /// </summary>
+    public void StartTimer()
+    {
+        timerStarted = true;
     }
 }

@@ -36,6 +36,13 @@ public class StartOverlayController : MonoBehaviour
     public MonoBehaviour lookScript;
 
     /// <summary>
+    /// Reference to the EndGameTrigger script, used to start the in-game timer when the player begins the game.
+    /// </summary>
+    [Header("Timer")]
+    [Tooltip("Reference to EndGameTrigger for starting the timer")]
+    public EndGameTrigger endGameTrigger;
+
+    /// <summary>
     /// Called on scene start. Disables movement and look input, shows UI, and unlocks cursor.
     /// </summary>
     private void Start()
@@ -80,5 +87,9 @@ public class StartOverlayController : MonoBehaviour
         Cursor.visible = false;
 
         Debug.Log("Game started.");
+
+        // Start the game timer
+        if (endGameTrigger != null)
+            endGameTrigger.StartTimer();
     }
 }
