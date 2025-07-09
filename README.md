@@ -6,7 +6,7 @@
 
 | Version | Platform | Download |
 |---------|----------|----------|
-| v1.0    | Windows  | [Download EscapeTheFacilitySetup_x64.exe](https://github.com/TheJaydenProject/basic-3d-EscapetheFacility/releases/latest/download/EscapeTheFacilitySetup_x64.exe) |
+| v1.0    | Windows  | [EscapeTheFacilitySetup_x64.exe](https://github.com/TheJaydenProject/basic-3d-EscapetheFacility/releases/latest/download/EscapeTheFacilitySetup_x64.exe) |
 
 ## Gameplay Overview
 
