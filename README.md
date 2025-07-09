@@ -21,17 +21,17 @@ To survive and escape, the player must:
 
 The game ends when the player successfully reaches the **escape door**. Collecting all coins is optional but contributes to your score.
 
-Max Score is 999 by game design. (Possible)
+Max Score is 999 by game design.
 
 ---
 
 ## Demo Videos
 
 ### Gameplay Demo  
-[![Gameplay Demo](https://www.github.com/watch?v=VIDEO_ID_HERE)
+[![Gameplay Demo](https://youtu.be/YKSbw5FFkUo)]
 
 ### Max Score Speedrun (999 Points)  
-[![Speedrun](https://www.github.com/watch?v=VIDEO_ID_HERE)
+[![Speedrun](https://youtu.be/N3LoRqUaNEY)]
 
 ---
 
