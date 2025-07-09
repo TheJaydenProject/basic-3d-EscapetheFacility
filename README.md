@@ -31,7 +31,7 @@ Max Score is 999 by game design.
 [![Gameplay Demo](https://img.youtube.com/vi/YKSbw5FFkUo/0.jpg)](https://youtu.be/YKSbw5FFkUo)
 
 ### Max Score Speedrun (999 Points)  
-[![Speedrun](https://img.youtube.com/vi/N3L0RqUaNEY/0.jpg)](https://youtu.be/N3L0RqUaNEY)
+[![Watch Speedrun on YouTube](https://img.youtube.com/vi/N3LoRqUaNEY/0.jpg)](https://youtu.be/N3LoRqUaNEY)
 
 ---
 
